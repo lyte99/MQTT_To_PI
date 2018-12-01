@@ -1,0 +1,12 @@
+c:\users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\mqtt_to_PI.exe.config
+c:\users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Debug\mqtt_to_PI.csprojResolveAssemblyReference.cache
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\mqtt_to_PI.exe
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\mqtt_to_PI.pdb
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Debug\mqtt_to_PI.exe
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Debug\mqtt_to_PI.pdb
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\M2Mqtt.Net.dll
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\M2Mqtt.Net.pdb
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\OSIsoft.AFSDK.dll
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Debug\OSIsoft.AFSDK.xml
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Debug\mqtt_to_PI.csproj.CoreCompileInputs.cache
+C:\Users\aegelhof\Documents\Visual Studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Debug\mqtt_to_PI.csproj.CopyComplete

@@ -1,0 +1,7 @@
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Release\mqtt_to_PI.exe.config
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Release\mqtt_to_PI.exe
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Release\mqtt_to_PI.pdb
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Release\M2Mqtt.Net.dll
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\bin\Release\M2Mqtt.Net.pdb
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Release\mqtt_to_PI.exe
+C:\Users\aegelhof\documents\visual studio 2013\Projects\mqtt_to_PI\mqtt_to_PI\obj\Release\mqtt_to_PI.pdb
