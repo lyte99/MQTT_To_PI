@@ -1,61 +1,99 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
-using OSIsoft.AF.PI;
-using OSIsoft.AF;
-using OSIsoft.AF.Data;
-using OSIsoft.AF.Asset;
-using OSIsoft.AF.EventFrame;
-using OSIsoft.AF.Time;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Net;
+using System.Text;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 namespace mqtt_to_PI
 {
+
+
     class Program
     {
+
+
+
+
         //global tag list so we dont have to check the server each time..
-        public static List<string> Taglist { get; set; }
+        //public static List<string> Taglist { get; set; }
+
+        //Get the default pi server
+        //public static PIServer MyPI = PIServers.GetPIServers().DefaultPIServer;
 
         static void Main(string[] args)
         {
-            Taglist = new List<string>();
-            Taglist.Add("something");
+            //Taglist = new List<string>();
+            //Taglist.Add("something");
+
+            //connect to the pi server
+            //MyPI.Connect();
+
 
             //create client instance(s)
 
-                //Andy's
-            int AndsePort = 2222;
-            string AndseHost = "";
-            //string AndseHost = "192.168.1.164";
-            MqttClient AndseClient = new MqttClient(AndseHost, AndsePort, false, null, null, MqttSslProtocols.None);
 
-            //Andy's Stuff
-            Andse_Connect(AndseClient);
+            //Andy's
+            //int AndsePort = 8883;
+            //string AndseHost = "";
+            ////string AndseHost = "";
+            ////cert path
+            //string andseCertpath = @"\certs\andse\";
+            ////system ca cert
+            //X509Certificate AcaCert = new X509Certificate();
+            //AcaCert.Import("mosq-andse-ca.crt");
+            ////client cert
+            //X509Certificate AclientCert = new X509Certificate();
+            //AclientCert.Import("client.crt");
+            ////TLS
+            //MqttClient AndseClient = new MqttClient(AndseHost, AndsePort, true, AcaCert, AclientCert, MqttSslProtocols.TLSv1_2, new RemoteCertificateValidationCallback(ValidateServerCertificate));
+
+            //////insecure 
+            //////AndsePort = 1883;
+            //////MqttClient AndseClient = new MqttClient(AndseHost, AndsePort, false, null, null, MqttSslProtocols.None);
+
+            //////Andy's Stuff
+            //Andse_Connect(AndseClient);
 
 
-                //Brian's
-                //int MunkeePort = 2222;
-                //string MunkeeHost = "";
-                //MqttClient MunkeeClient = new MqttClient(MunkeeHost, MunkeePort, false, null, null, MqttSslProtocols.None);
+            //Brian's
+            //int MunkeePort = 2222;
+            //string MunkeeHost = "munkee.game-host.org";
+            //MqttClient MunkeeClient = new MqttClient(MunkeeHost, MunkeePort, false, null, null, MqttSslProtocols.None);
 
 
-                ////Brian's Stuff
-                //Munkee_Connect(MunkeeClient);
+            ////Brian's Stuff
+            //Munkee_Connect(MunkeeClient);
 
 
-                //MqttClient TestClient = TestClientCreation();
-                //Test_Connect(TestClient);
-            
+            //TEC
+            int TECPort = 1883;
+            string TECHost = "tecmqttbroker.tecsystemsgroup.com";
+            MqttClient TECClient = new MqttClient(TECHost, TECPort, false, null, null, MqttSslProtocols.None);
+
+            //TEC Stuff
+            TEC_Connect(TECClient);
+
+
+            //MqttClient TestClient = TestClientCreation();
+            //Test_Connect(TestClient);
+
+            // MyPI.Disconnect();
+
+
         }
 
         private static MqttClient TestClientCreation()
         {
             //test
             int TestPort = 1883;
-            string TestHost = "192.168.1.133";
+            string TestHost = "";
             MqttClient TestClient = new MqttClient(TestHost, TestPort, false, null, null, MqttSslProtocols.None);
 
             return TestClient;
@@ -198,7 +236,7 @@ namespace mqtt_to_PI
             string clientID = Guid.NewGuid().ToString();
 
             //client connection
-            AndseClient.Connect(clientID, "USERNAME", "PASSWORD");
+            AndseClient.Connect(clientID, "", "");
 
 
             //topic subscription(s)
@@ -216,7 +254,7 @@ namespace mqtt_to_PI
             string clientID = Guid.NewGuid().ToString();
 
             //client connection
-            MunkeeClient.Connect(clientID, "USERNAME", "PASSWORD");
+            MunkeeClient.Connect(clientID, "", "");
 
 
             //topic subscription(s)
@@ -224,6 +262,8 @@ namespace mqtt_to_PI
              
 
         }
+
+
 
         private static void Munkee_MqTTConnectionClosed(object sender, EventArgs e)
         {
@@ -244,7 +284,7 @@ namespace mqtt_to_PI
 
             Console.WriteLine("Topic: " + topic + ". Message: " + message);
 
-            //CHECK FOR THE TAG THEN UPDATE IT
+            ////CHECK FOR THE TAG THEN UPDATE IT
             string tagname = CheckTag(topic, message);
 
             UpdatePIPoint(tagname, message);
@@ -252,6 +292,8 @@ namespace mqtt_to_PI
 
             
     }
+
+
             
         static void Munkee_MqTTMsgPublishRecieved(object sender, MqttMsgPublishEventArgs e)
         {
@@ -275,11 +317,48 @@ namespace mqtt_to_PI
 
         }
 
+        private static void TEC_Connect(MqttClient TECClient)
+        {
+            //register client
+            TECClient.MqttMsgPublishReceived += TEC_MqTTMsgPublishRecieved;
+
+            TECClient.ConnectionClosed += Munkee_MqTTConnectionClosed;
+
+            string clientID = Guid.NewGuid().ToString();
+
+            //client connection
+            TECClient.Connect(clientID);
+
+
+            //topic subscription(s)
+            TECClient.Subscribe(new string[] { "#" }, new byte[] { MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE });
+
+
+        }
+
+        static void TEC_MqTTMsgPublishRecieved(object sender, MqttMsgPublishEventArgs e)
+        {
+            string message = Encoding.UTF8.GetString(e.Message);
+            string topic = e.Topic.ToString();//Encoding.UTF8.GetString(e.Topic);
+
+            Console.WriteLine("Mqtt Message Recieved from TEC");
+
+            Console.WriteLine("Topic: " + topic + ". Message: " + message);
+
+            //CHECK FOR THE TAG THEN UPDATE IT
+            string tagname = CheckTag(topic, message);
+
+            UpdatePIPoint(tagname, message);
+
+
+
+        }
+
 
         static void UpdatePIPoint(string PIPointName, string value)
         {
             Console.WriteLine("Attemping PI Point Update for: " + PIPointName);
-            bool usestring = false;
+            //bool usestring = false;
 
             try
             {
@@ -288,42 +367,91 @@ namespace mqtt_to_PI
                     
                     if (double.TryParse(value, out PIDbValue))
                     {
-                        PIDbValue = Convert.ToDouble(value);
+                        //PIDbValue = Convert.ToDouble(value);
                     }
                     else
                     {
-                        usestring = true;
+                        //usestring = true;
+                        value = "'" + value + "'";
                     }
 
 
-                //Get the default pi server
-                PIServer MyPI = PIServers.GetPIServers().DefaultPIServer;
+                //get the pipoint info
 
-                //connect to the pi server
-                MyPI.Connect();
+                //pi tag  search
+                //string URL = "https://PISERVERNAME/piwebapi/search/query?q=name:" + PIPointName; //LEGACY WAY NO LONGER WORKS IN PIWEBAPI 2019 SP1 +;
+                string URL = "https://PISERVERNAME/piwebapi/points?path=\\\\PISERVERNAME" + "\\" + PIPointName;
 
-                //set pi point
-                OSIsoft.AF.PI.PIPoint UpdatePoint = OSIsoft.AF.PI.PIPoint.FindPIPoint(MyPI, PIPointName);
+                //not using kerberos authentication
+                NetworkCredential credentials = GetNetworkCredentials();
+
+                //tag search
+                Task<string> task = Task.Run(async () => await GetPIDataAsync(URL, credentials));
+                task.Wait();
+                string content = task.Result;
+                PITagSearchResults.Root searchResults = JsonConvert.DeserializeObject<PITagSearchResults.Root>(content);
 
 
-                //update the value
-                if (!usestring)
-                {
-                   UpdatePoint.UpdateValue(new AFValue(PIDbValue), AFUpdateOption.Insert);
-                }
-                else
-                {
-                    UpdatePoint.UpdateValue(new AFValue(value), AFUpdateOption.Insert);
-                }
-                
+                //update pointsource since I can't seem to do it on create....
+                string URL_UpdateTag = "https://PISERVERNAME/piwebapi/streams/" + searchResults.WebId + "/value";
 
-                //disconnect from the pi server
-                MyPI.Disconnect();
+                string jsonContent = @"{'Timestamp': '*','Good': true, 'Questionable': false, 'Value': " + value + "}";
+
+                Task<string> task1 = Task.Run(async () => await PostPIDataAsync(URL_UpdateTag, credentials, jsonContent, "POST"));
+                task1.Wait();
+
             }
             catch (Exception e)
             {
                 Console.WriteLine("Error Saving PI Data for PI Point" + PIPointName + ".  Value: " + value.ToString() +".  Message: "  + e.Message);
             }
+
+
+            //OLD CODE
+
+            //try
+            //{
+            //    //convert the value to a double
+            //    double PIDbValue;
+
+            //    if (double.TryParse(value, out PIDbValue))
+            //    {
+            //        PIDbValue = Convert.ToDouble(value);
+            //    }
+            //    else
+            //    {
+            //        usestring = true;
+            //    }
+
+
+            //    //Get the default pi server
+            //    PIServer MyPI = PIServers.GetPIServers().DefaultPIServer;
+
+            //    //connect to the pi server
+            //    //MyPI.Connect();
+
+            //    //set pi point
+            //    OSIsoft.AF.PI.PIPoint UpdatePoint = OSIsoft.AF.PI.PIPoint.FindPIPoint(MyPI, PIPointName);
+
+
+            //    //update the value
+            //    if (!usestring)
+            //    {
+            //        UpdatePoint.UpdateValue(new AFValue(PIDbValue), AFUpdateOption.Insert);
+            //    }
+            //    else
+            //    {
+            //        UpdatePoint.UpdateValue(new AFValue(value), AFUpdateOption.Insert);
+            //    }
+
+
+            //    //disconnect from the pi server
+            //    //MyPI.Disconnect();
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine("Error Saving PI Data for PI Point" + PIPointName + ".  Value: " + value.ToString() + ".  Message: " + e.Message);
+            //}
 
 
 
@@ -333,121 +461,270 @@ namespace mqtt_to_PI
 
         static string CheckTag(string topic, string value)
         {
-            
             //init
-            string tagname = "";
+            string tagName = "";
 
             //turn the topic into a tag name
             string tagtopic = topic.Replace("/", ".");
-            tagname = "MQTT" + tagtopic;
+            tagName = "MQTT" + tagtopic;
 
-
-
-
-            
             //check for pi point
 
-            //check this list first as to not hit the server each time.
-            if (Taglist.Count() > 0 && !Taglist.Contains(tagname))
+            //pi tag  search
+            //string URL = "https://PISERVERNAME/piwebapi/search/query?q=name:"+ tagName;  \\LEGACY WAY NO LONGER WORKS IN PIWEBAPI 2019 SP1 +;
+            string URL = "https://PISERVERNAME/piwebapi/points?path=\\\\PISERVERNAME" + "\\" +tagName;
+            //Console.WriteLine("URL: " + URL);
+
+            //not using kerberos authentication
+            NetworkCredential credentials = GetNetworkCredentials();
+
+            //tag search
+            Task<string> task = Task.Run(async () => await GetPIDataAsync(URL, credentials));
+            task.Wait();
+            string content = task.Result;
+            PITagSearchResults.Root searchResults = JsonConvert.DeserializeObject<PITagSearchResults.Root>(content);
+
+            //does the tag exsist? If not, create it
+            if (searchResults.WebId == null)
             {
-                bool createstring = false;
+                Console.WriteLine("Tag NOT Found:" + tagName);
 
-                //Get the default pi server
-                PIServer MyPI = PIServers.GetPIServers().DefaultPIServer;
-                //connect to the pi server
-                MyPI.Connect();
+                string pointType = "Float32";
 
+                //create the tag
 
-                try
+                // string or float?
+                double PIDbValue;
+
+                if (double.TryParse(value, out PIDbValue))
                 {
-                    //it will check for the tag and throw an exception if it doesn't find it.  Not the fanciest way, but it works...
-                    PIPoint CheckforPoint = PIPoint.FindPIPoint(MyPI, tagname);
-
-                    Console.WriteLine("TagFound on server:" + tagname);
-
-                    //if it hasn't thrown the exception add it to the list so we don't check the server each time.
-                    Taglist.Add(tagname);
-
-
-
+                    PIDbValue = Convert.ToDouble(value);
                 }
-                catch (Exception e)
+                else
                 {
-                    Console.WriteLine("Tag NOT Found:" + tagname);
-
-                    //create the tag
-                    try
-                    {
-                        //create the tag
-                        MyPI.CreatePIPoint(tagname);
-                        Console.WriteLine("Created tag: " + tagname);
-
-
-                        PIPoint CheckforPoint = PIPoint.FindPIPoint(MyPI, tagname);
-
-                        //string or float?
-                        double PIDbValue;
-
-                        if (double.TryParse(value, out PIDbValue))
-                        {
-                            PIDbValue = Convert.ToDouble(value);
-                        }
-                        else
-                        {
-                            createstring = true;
-                        }
-
-                        //set the pointsource
-                        CheckforPoint.SetAttribute(PICommonPointAttributes.PointSource, "MQTT");
-
-                        if (createstring)
-                        { 
-                            CheckforPoint.SetAttribute(PICommonPointAttributes.PointType, "String");
-                        }
-                        else
-                        {
-                            //default is Float32
-                        }
-                        
-                        
-                        
-                        //save
-                        CheckforPoint.SaveAttributes();
-
-
-                    }
-                    catch (Exception e1)
-                    {
-                        Console.WriteLine("Unable to Create tag: " + tagname);
-                        Console.ReadKey();
-                    }
-                   
-
-                    
-
-                    
-
-                    Taglist.Add(tagname);
+                    pointType = "String";
 
                 }
 
-                //disconnect from the pi server
-                MyPI.Disconnect();
+
+                ////batch controller  COULDN'T GET THE BATCH CONTROLLER TO UPDATE THE POINTSOURCE...
+                string batch_URL = "https://PISERVERNAME/piwebapi/batch";
+
+                //batch request string to create a tag, get its info(webID) and update its point source.  Couldn't get the pointsource to set on creation, jus wouldn't work
+                //string jsonContent = @"{""CreateTag"" :{""Method"":""POST"",""Resource"":""https://PISERVERNAME/piwebapi/dataservers/F1DSUg9RgGAqQUap9GVsKYIDXwREVWRUxPUDI/points"",""Content"": ""{'Name': '" + tagName + @"','PointClass': 'classic','PointType': '"+ pointType + @"','Future': false}'}""},";
+                string jsonContent = @"{""CreateTag"" :{""Method"":""POST"",""Resource"":""https://PISERVERNAME/piwebapi/dataservers/F1DSE7nLCGKZrUidwmI1mNzBhAVEVDUEkx/points"",""Content"": ""{'Name': '" + tagName + @"','PointClass': 'classic','PointType': '" + pointType + @"','Future': false}'}""},";
+                
+                jsonContent = jsonContent + @"""GetTagInfo"":{""Method"":""GET"",""ParentIDs"":[""CreateTag""],""Parameters"":[""$.CreateTag.Headers.Location""],""Resource"":""{0}""},";
+                
+                //this errors but it does seem to work..  Just seems to not update for a bit.
+                jsonContent = jsonContent + @"""UpdatePointSource"":{""Method"":""PATCH"",""ParentIDs"":[""GetTagInfo""],""Parameters"":[""$.GetTagInfo.Content.WebId""],""Resource"": ""https://PISERVERNAME/piwebapi/points/{0}"", ""Content"": ""{ 'PointSource': 'MQTT'}""}}";
+
+                //post content to run batch commands
+                Task<string> task1 = Task.Run(async () => await PostPIDataAsync(batch_URL, credentials, jsonContent, "POST"));
+                task1.Wait();
+
             }
-            else
-            {
-                Console.WriteLine("TagFound in list:" + tagname);
-            }
+            //old code
+
+            ////check this list first as to not hit the server each time.
+            //if (Taglist.Count() > 0 && !Taglist.Contains(tagname))
+            //{
+            //    bool createstring = false;
+
+            //    ////Get the default pi server
+            //    //PIServer MyPI = PIServers.GetPIServers().DefaultPIServer;
+            //    ////connect to the pi server
+            //    //MyPI.Connect();
+
+
+            //    try
+            //    {
+            //        //it will check for the tag and throw an exception if it doesn't find it.  Not the fanciest way, but it works...
+            //        PIPoint CheckforPoint = PIPoint.FindPIPoint(MyPI, tagname);
+
+            //        Console.WriteLine("TagFound on server:" + tagname);
+
+            //        //if it hasn't thrown the exception add it to the list so we don't check the server each time.
+            //        Taglist.Add(tagname);
+
+
+
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        Console.WriteLine("Tag NOT Found:" + tagname);
+
+            //        //create the tag
+            //        try
+            //        {
+            //            //create the tag
+            //            MyPI.CreatePIPoint(tagname);
+            //            Console.WriteLine("Created tag: " + tagname);
+
+
+            //            PIPoint CheckforPoint = PIPoint.FindPIPoint(MyPI, tagname);
+
+            //            //string or float?
+            //            double PIDbValue;
+
+            //            if (double.TryParse(value, out PIDbValue))
+            //            {
+            //                PIDbValue = Convert.ToDouble(value);
+            //            }
+            //            else
+            //            {
+            //                createstring = true;
+            //            }
+
+            //            //set the pointsource
+            //            CheckforPoint.SetAttribute(PICommonPointAttributes.PointSource, "MQTT");
+
+            //            if (createstring)
+            //            { 
+            //                CheckforPoint.SetAttribute(PICommonPointAttributes.PointType, "String");
+            //            }
+            //            else
+            //            {
+            //                //default is Float32
+            //            }
+
+
+
+            //            //save
+            //            CheckforPoint.SaveAttributes();
+
+
+            //        }
+            //        catch (Exception e1)
+            //        {
+            //            Console.WriteLine("Unable to Create tag: " + tagname);
+            //            Console.ReadKey();
+            //        }
 
 
 
 
 
 
+            //        Taglist.Add(tagname);
+
+            //    }
+
+            //    //disconnect from the pi server
+            //    //MyPI.Disconnect();
+            //}
+            //else
+            //{
+            //    Console.WriteLine("TagFound in list:" + tagname);
+            //}
 
 
-
-            return tagname;
+            return tagName;
         }
+
+
+        public static async Task<string> GetPIDataAsync(string url, NetworkCredential credentials)
+        {
+
+            HttpClientHandler clientHandler = new HttpClientHandler();
+
+            //ignores SSL errors, we're using a self signed cert in dev.
+            clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+            clientHandler.Credentials = credentials;
+
+            HttpClient _client = new HttpClient(clientHandler);
+
+
+            string content = "";
+            try
+            {
+
+                HttpResponseMessage response = await _client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    content = await response.Content.ReadAsStringAsync();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("\tERROR {0}", ex.Message + ". Inner exception: " + ex.InnerException.Message);
+            }
+
+            return content;
+        }
+
+        public static async Task<string> PostPIDataAsync(string url, NetworkCredential credentials, string jsonContent, string Type)
+        {
+
+            HttpClientHandler clientHandler = new HttpClientHandler();
+
+            //ignores SSL errors, we're using a self signed cert in dev.
+            clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+            clientHandler.Credentials = credentials;
+
+            HttpClient _client = new HttpClient(clientHandler);
+
+            string content = "";
+            try
+            {
+
+                HttpResponseMessage response = new HttpResponseMessage();
+
+                if (Type.ToUpper() == "POST")
+                {
+                    response = await _client.PostAsync(url, new StringContent(jsonContent, Encoding.UTF8, "application/json"));
+                }
+                else
+                {
+                    response = await _client.PutAsync(url, new StringContent(jsonContent, Encoding.UTF8, "application/json"));
+                }
+
+
+                if (response.IsSuccessStatusCode)
+                {
+                    content = await response.Content.ReadAsStringAsync();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("\tERROR {0}", ex.Message + ". Inner exception: " + ex.InnerException.Message);
+            }
+
+            return content;
+        }
+
+
+        static NetworkCredential GetNetworkCredentials()
+        {
+
+            NetworkCredential credentials = new NetworkCredential();
+
+            credentials.UserName = "USERNAME";
+            credentials.Password = "PASSWRORD";
+
+            return credentials;
+
+        }
+
+        public static bool ValidateServerCertificate(
+                object sender,
+                X509Certificate certificate,
+                X509Chain chain,
+                SslPolicyErrors sslPolicyErrors)
+        {
+            //if (sslPolicyErrors == SslPolicyErrors.None)
+            //    return true;
+
+            //Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
+
+            //// Do not allow this client to communicate with unauthenticated servers.
+            //return false;
+
+            //alwo any cert
+            return true;
+        }
+
     }
 }
